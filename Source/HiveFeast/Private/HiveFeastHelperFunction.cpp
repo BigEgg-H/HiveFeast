@@ -3,23 +3,11 @@
 
 #include "HiveFeastHelperFunction.h"
 
-
-double UHiveFeastHelperFunction::ComprehensiveScore(TSet<AFood*> SourceFood)
+UFoodFlavor* UHiveFeastHelperFunction::CreateFoodFlavor(TMap<EFlavorType, double> SourceData)
 {
-	FFlavorWeight AverageWeight = {
-		1,1,1,1,
-		1,1,1,1,
-		1,1,1,1,
-		1,1,1,1,
-		1,1
-	};
-	
-	return ComprehensiveScoreByWeight(SourceFood,AverageWeight);
-}
-
-double UHiveFeastHelperFunction::ComprehensiveScoreByWeight(TSet<AFood*> SourceFood, FFlavorWeight Weight)
-{
-	return 0.0;
+	UFoodFlavor* Buffer = NewObject<UFoodFlavor>();
+	Buffer->SetData(SourceData);
+	return Buffer;
 }
 
 UFoodFlavor* UHiveFeastHelperFunction::AddFoodFlavor(UFoodFlavor* A, UFoodFlavor* B)

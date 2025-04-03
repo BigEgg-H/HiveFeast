@@ -12,14 +12,14 @@ struct FVisualFoodFeedbackData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere,Category="HiveFeast|Food|Visual")
-	FTransform TargetTransform;
+	UPROPERTY(VisibleAnywhere,Category="HiveFeast")
+	FTransform TargetTransform = FTransform();
 
-	UPROPERTY(VisibleAnywhere,Category="HiveFeast|Food|Visual")
-	UStaticMesh* TargetMesh;
+	UPROPERTY(VisibleAnywhere,Category="HiveFeast")
+	UStaticMesh* TargetMesh = nullptr;
 };
 
-UCLASS(BlueprintType, Category = "HiveFeast|Food|Visual")
+UCLASS(BlueprintType, Blueprintable, Category = "HiveFeast")
 class HIVEFEAST_API AVisualFood : public AActor
 {
 	GENERATED_BODY()
@@ -28,10 +28,12 @@ public:
 	
 	virtual void SpawnToWorld(const FTransform& SpawnTransform){};
 	virtual FVisualFoodFeedbackData GetTargetForDish() {return FVisualFoodFeedbackData();};
+
+	UFUNCTION(BlueprintCallable, Category = "HiveFeast")
 	virtual void StopVisualSimulation() {};
 };
 
-UCLASS(BlueprintType, Category = "HiveFeast|Food|Visual")
+UCLASS(BlueprintType, Category = "HiveFeast")
 class HIVEFEAST_API AVisualIngredient : public AVisualFood
 {
 	GENERATED_BODY()
@@ -47,7 +49,7 @@ public:
 	virtual void StopVisualSimulation() override;
 };
 
-UCLASS(BlueprintType, Category = "HiveFeast|Food|Visual")
+UCLASS(BlueprintType, Category = "HiveFeast")
 class HIVEFEAST_API AVisualFleshIngredient : public AVisualFood
 {
 	GENERATED_BODY()

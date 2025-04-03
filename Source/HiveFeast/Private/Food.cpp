@@ -7,6 +7,13 @@ AFood::AFood()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bIsValidFood = false;
+
+	Flavor = NewObject<UFoodFlavor>();
+}
+
+bool AFood::IsValid() const
+{
+	return bIsValidFood;
 }
 
 AIngredient::AIngredient()
@@ -21,7 +28,7 @@ AIngredient::AIngredient()
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 }
 
-void AIngredient::InitializeFromGoods(FIngredientBasicData TempDesc)
+void AIngredient::Initialize(FIngredientBasicData TempDesc)
 {
 	ensureAlwaysMsgf(!bIsValidFood,TEXT("重复初始化一个菜品类!"));
 	
@@ -52,7 +59,21 @@ void AIngredient::InitializeFromGoods(FIngredientBasicData TempDesc)
 	SpawnParameters.Template = VisualIngredientTemp;
 }
 
-void AIngredient::SpawnIngredientAt(const FTransform& TargetTransform)
+FDishBasicData AIngredient::CreateDishBasicData()
+{
+	FDishBasicData Buffer = FDishBasicData();
+	Buffer.IngredientFlavor = Flavor;
+	Buffer.TargetStaticMesh = BasicData.IngredientStaticMesh;
+	Buffer.IsDrink = false;
+	Buffer.FlavorWeight = 1.0;
+	for (auto Element : Ingredients)
+	{
+		Buffer.TargetTransforms.Add(Element->GetActorTransform());
+	}
+	return Buffer;
+}
+
+AVisualFood* AIngredient::SpawnAt(const FTransform& TargetTransform)
 {
 	ensureAlwaysMsgf(bIsValidFood,TEXT("放置未初始化的食材!"));
 	
@@ -60,21 +81,23 @@ void AIngredient::SpawnIngredientAt(const FTransform& TargetTransform)
 	{
 		ensureAlwaysMsgf(SolverActor,TEXT("未设置变形器解算器对象,无法生成\"肉体\"食材!"));
 		if (!SolverActor)
-			return;
+			return nullptr;
 		AVisualFleshIngredient* Buffer = Cast<AVisualFleshIngredient>(
 			GetWorld()->SpawnActor(AVisualFleshIngredient::StaticClass(), &TargetTransform, SpawnParameters)
 			);
 		Ingredients.Add(Buffer);
 		Buffer->SolverActor = SolverActor;
 		Buffer->SpawnToWorld(TargetTransform);
+		return Buffer;
 	}
 	else
 	{
-		AVisualFood* Buffer = Cast<AVisualFood>(
+		AVisualIngredient* Buffer = Cast<AVisualIngredient>(
 			GetWorld()->SpawnActor(AVisualIngredient::StaticClass(), &TargetTransform, SpawnParameters)
 			);
 		Ingredients.Add(Buffer);
 		Buffer->SpawnToWorld(TargetTransform);
+		return Buffer;
 	}
 }
 
@@ -84,7 +107,7 @@ ADrink::ADrink()
 	bIsValidFood = false;
 }
 
-void ADrink::InitializeFromGoods(FDrinkBasicData TempDesc)
+void ADrink::Initialize(FDrinkBasicData TempDesc)
 {
 	ensureAlwaysMsgf(!bIsValidFood,TEXT("重复初始化一个菜品类!"));
 	
@@ -101,40 +124,34 @@ ADish::ADish()
 	bIsValidFood = false;
 }
 
-void ADish::Initialize(FDishBasicData Data)
+void ADish::Initialize(TArray<FDishBasicData> Data)
 {
 	ensureAlwaysMsgf(!bIsValidFood,TEXT("重复初始化一个菜品类!"));
 
 	bIsValidFood = true;
 	BasicData = Data;
-}
-
-void ADish::InitializeFromIngredient(TSet<AIngredient*> OriginalIngredient)
-{
-	///已弃用
-	ensureAlwaysMsgf(!bIsValidFood,TEXT("重复初始化一个菜品类!"));
-
-	bIsValidFood = true;
-	for (auto Ingredient : OriginalIngredient)
+	
+	for (auto Element : Data)
 	{
-		for (auto Ingredient_Ins : Ingredient->Ingredients)
+		Flavor->operator+=(Element.IngredientFlavor->operator*(Element.FlavorWeight));
+		if (Element.IsDrink)
 		{
-			FVisualFoodFeedbackData Target = Ingredient_Ins->GetTargetForDish();
-			UStaticMeshComponent* Buffer = Cast<UStaticMeshComponent>(AddComponentByClass(
-				UStaticMeshComponent::StaticClass(), true, Target.TargetTransform, false
+			//TODO: Initialize by drink
+		}
+		else
+		{
+			for (auto TransformElement : Element.TargetTransforms)
+			{
+				UStaticMeshComponent* Buffer = Cast<UStaticMeshComponent>(AddComponentByClass(
+					UStaticMeshComponent::StaticClass(), true, TransformElement, false
 				));
-			Buffer->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-			Buffer->SetStaticMesh(Target.TargetMesh);
-			Buffer->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				Buffer->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+				Buffer->SetStaticMesh(Element.TargetStaticMesh);
+				//
+				// 在这里初始化菜品中的每一个静态网格体组件，设置其初始参数
+				//
+				Buffer->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
 		}
 	}
 }
-
-void ADish::InitializeFromDrink(ADrink* OriginalDrink, TSet<AIngredient*> OriginalIngredient)
-{
-	///已弃用
-	ensureAlwaysMsgf(!bIsValidFood,TEXT("重复初始化一个菜品类!"));
-
-	bIsValidFood = true;
-}
-

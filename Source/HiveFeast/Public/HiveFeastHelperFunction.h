@@ -14,14 +14,9 @@ class HIVEFEAST_API UHiveFeastHelperFunction : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	/*计算给定所有食品的综合总平均分*/
-	UFUNCTION(BlueprintCallable, Category = "HiveFeast", meta=(DeprecatedFunction))
-	static double ComprehensiveScore(TSet<AFood*> SourceFood);
-
-	/*按照给定的权重,计算给定所有食品的综合总分*/
-	UFUNCTION(BlueprintCallable, Category = "HiveFeast", meta=(DeprecatedFunction))
-	static double ComprehensiveScoreByWeight(TSet<AFood*> SourceFood,FFlavorWeight Weight);
-
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HiveFeast")
+	static UFoodFlavor* CreateFoodFlavor(TMap<EFlavorType,double> SourceData);
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure, meta = (DisplayName = "Add", CompactNodeTitle = "+", Keywords = "+ add plus"), Category = "HiveFeast")
 	static UFoodFlavor* AddFoodFlavor(UFoodFlavor* A,UFoodFlavor* B);
 
